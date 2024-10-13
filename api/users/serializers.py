@@ -3,6 +3,8 @@ from django.contrib.auth.password_validation import validate_password
 from django.core import exceptions
 from rest_framework import serializers
 
+from api.models import Project
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -19,4 +21,16 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(e.messages)
 
     def create(self, validated_data: dict):
-        return User.objects.create_user(**validated_data)
+        registered_user = User.objects.create_user(**validated_data)
+        Project.objects.create(
+            title=f"{registered_user.username.title()} Project",
+            description="This is a personal project root.",
+            # Có thể để None hoặc đặt giá trị mặc định khác
+            time_start=None,
+            time_end=None,
+            type="personal",
+            owner=registered_user,
+            parent=None,  # Đây là root project nên parent là None
+        )
+
+        return registered_user
